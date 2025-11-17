@@ -120,7 +120,7 @@ def predict(model_name='improved', checkpoint_path=None, video_id=None):
                 print(f"  {i+1}. {class_name}: {prob.item()*100:.2f}%")
             
             # Resultado
-            is_correct = "✓ CORRECTO" if pred_class_idx == true_class_idx else "✗ INCORRECTO"
+            is_correct = "[OK] CORRECTO" if pred_class_idx == true_class_idx else "[X] INCORRECTO"
             print(f"\nResultado: {is_correct}")
             
             return {

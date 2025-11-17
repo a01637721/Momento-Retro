@@ -62,13 +62,14 @@ class SkeletonDataset(Dataset):
             keypoint_scores = np.pad(keypoint_scores, ((0, 0), (0, pad_length), (0, 0)), mode='constant')
             T = config.MAX_FRAMES
         
-        # Combinar personas: promediar o concatenar
-        # Estrategia: promediar keypoints de múltiples personas
+        # Combinar personas: usar la primera persona o promediar
+        # Estrategia: usar la persona con mayor visibilidad promedio
         if M > 1:
-            # Promediar keypoints ponderados por scores
-            keypoints_weighted = keypoints * keypoint_scores[:, :, :, np.newaxis]
-            keypoints_avg = np.sum(keypoints_weighted, axis=0) / (np.sum(keypoint_scores, axis=0, keepdims=True) + 1e-8)
-            keypoints = keypoints_avg[np.newaxis, :, :, :]
+            # Calcular visibilidad promedio por persona
+            visibility = np.mean(keypoint_scores, axis=(1, 2))  # [M]
+            best_person_idx = np.argmax(visibility)
+            keypoints = keypoints[best_person_idx:best_person_idx+1]  # [1, T, V, C]
+            keypoint_scores = keypoint_scores[best_person_idx:best_person_idx+1]  # [1, T, V]
         
         # Aplicar data augmentation si está habilitado
         if self.augment and config.AUGMENT_CONFIG['enable']:
@@ -92,22 +93,42 @@ class SkeletonDataset(Dataset):
         # keypoints shape: [T, V*C]
         # Separar x e y
         num_keypoints = config.NUM_KEYPOINTS
-        x_coords = keypoints[:, :num_keypoints]
-        y_coords = keypoints[:, num_keypoints:]
+        x_coords = keypoints[:, :num_keypoints].copy()
+        y_coords = keypoints[:, num_keypoints:].copy()
         
-        # Centrar (restar media)
-        x_mean = np.mean(x_coords[x_coords != 0])
-        y_mean = np.mean(y_coords[y_coords != 0])
+        # Filtrar ceros y valores inválidos
+        x_valid = x_coords[x_coords != 0]
+        y_valid = y_coords[y_coords != 0]
         
-        x_coords = x_coords - x_mean
-        y_coords = y_coords - y_mean
+        # Centrar (restar media) solo si hay valores válidos
+        if len(x_valid) > 0:
+            x_mean = np.mean(x_valid)
+            x_coords = x_coords - x_mean
+        else:
+            x_mean = 0.0
+        
+        if len(y_valid) > 0:
+            y_mean = np.mean(y_valid)
+            y_coords = y_coords - y_mean
+        else:
+            y_mean = 0.0
         
         # Escalar (dividir por desviación estándar)
-        x_std = np.std(x_coords[x_coords != 0]) + 1e-8
-        y_std = np.std(y_coords[y_coords != 0]) + 1e-8
+        if len(x_valid) > 1:
+            x_std = np.std(x_valid) + 1e-8
+            x_coords = x_coords / x_std
+        else:
+            x_std = 1.0
         
-        x_coords = x_coords / x_std
-        y_coords = y_coords / y_std
+        if len(y_valid) > 1:
+            y_std = np.std(y_valid) + 1e-8
+            y_coords = y_coords / y_std
+        else:
+            y_std = 1.0
+        
+        # Reemplazar NaN e Inf con 0
+        x_coords = np.nan_to_num(x_coords, nan=0.0, posinf=0.0, neginf=0.0)
+        y_coords = np.nan_to_num(y_coords, nan=0.0, posinf=0.0, neginf=0.0)
         
         # Reconstruir
         keypoints_norm = np.concatenate([x_coords, y_coords], axis=1)
@@ -158,16 +179,24 @@ def filter_classes(annotations, selected_classes, class_names):
     # Filtrar anotaciones
     filtered_annotations = []
     for ann in annotations:
-        # Obtener nombre de clase desde frame_dir o label
-        # Asumimos que el label es un índice que corresponde a class_names
-        label_idx = ann['label']
-        if label_idx < len(class_names):
-            class_name = class_names[label_idx]
-            if class_name in selected_classes:
-                # Actualizar label al nuevo índice
-                ann_copy = ann.copy()
-                ann_copy['label'] = class_name
-                filtered_annotations.append(ann_copy)
+        # Obtener nombre de clase desde frame_dir
+        frame_dir = ann['frame_dir']
+        # Formato: "ClassName/v_ClassName_..." o solo el label numérico
+        if '/' in frame_dir:
+            class_name = frame_dir.split('/')[0]
+        else:
+            # Si no hay /, usar el label como índice
+            label_idx = ann['label']
+            if label_idx < len(class_names):
+                class_name = class_names[label_idx]
+            else:
+                continue
+        
+        if class_name in selected_classes:
+            # Actualizar label al nuevo índice
+            ann_copy = ann.copy()
+            ann_copy['label'] = class_name
+            filtered_annotations.append(ann_copy)
     
     print(f"Filtradas {len(filtered_annotations)} anotaciones de {len(selected_classes)} clases")
     return filtered_annotations, labels_map

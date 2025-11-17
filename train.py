@@ -184,7 +184,7 @@ def train(model_name='baseline'):
                 'class_names': class_names,
                 'config': config.TRAIN_CONFIG
             }, checkpoint_path)
-            print(f"✓ Mejor modelo guardado (Val Acc: {val_acc:.2f}%)")
+            print(f"[OK] Mejor modelo guardado (Val Acc: {val_acc:.2f}%)")
         else:
             patience_counter += 1
         
@@ -210,7 +210,7 @@ def train(model_name='baseline'):
     with open(history_path, 'w') as f:
         json.dump(train_history, f, indent=2)
     
-    print(f"\n✓ Entrenamiento completado")
+    print(f"\n[OK] Entrenamiento completado")
     print(f"Mejor Val Acc: {best_val_acc:.2f}%")
     print(f"Historial guardado en: {history_path}")
     print(f"Mejor modelo guardado en: {checkpoint_dir}/{model_name}_best.pth")

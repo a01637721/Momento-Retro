@@ -18,13 +18,13 @@ def quick_start():
     # 1. Verificar datos
     print("\n1. Verificando datos...")
     if not os.path.exists(config.SKELETON_FILE):
-        print(f"❌ Error: No se encontró {config.SKELETON_FILE}")
+        print(f"[ERROR] No se encontro {config.SKELETON_FILE}")
         print("\nPor favor descarga el archivo desde:")
         print("https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ucf101_2d.pkl")
-        print(f"Y colócalo en: {config.SKELETON_FILE}")
+        print(f"Y colocalo en: {config.SKELETON_FILE}")
         return
     else:
-        print(f"✓ Archivo encontrado: {config.SKELETON_FILE}")
+        print(f"[OK] Archivo encontrado: {config.SKELETON_FILE}")
     
     # 2. Preparar datos
     print("\n2. Preparando datos...")
@@ -39,10 +39,10 @@ def quick_start():
             return
     
     if processed_data:
-        print(f"✓ Clases: {processed_data['class_names']}")
-        print(f"✓ Train: {len(processed_data['train'])} videos")
-        print(f"✓ Val: {len(processed_data['val'])} videos")
-        print(f"✓ Test: {len(processed_data['test'])} videos")
+        print(f"[OK] Clases: {processed_data['class_names']}")
+        print(f"[OK] Train: {len(processed_data['train'])} videos")
+        print(f"[OK] Val: {len(processed_data['val'])} videos")
+        print(f"[OK] Test: {len(processed_data['test'])} videos")
     
     # 3. Información sobre entrenamiento
     print("\n3. Información de entrenamiento:")
@@ -65,7 +65,7 @@ def quick_start():
     print("   python compare_models.py")
     
     print("\n" + "="*60)
-    print("✓ Quick start completado!")
+    print("[OK] Quick start completado!")
     print("="*60)
 
 
