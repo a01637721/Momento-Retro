@@ -9,27 +9,6 @@ Este proyecto implementa modelos de deep learning para reconocimiento de accione
 - **Modelo Baseline**: LSTM simple para secuencias de esqueletos
 - **Modelo Mejorado**: LSTM bidireccional con capas de atención y dropout para regularización
 
-## Estructura del Proyecto
-
-```
-momento-retro/
-├── data/
-│   ├── ucf101_2d.pkl          # Anotaciones de esqueletos (descargar)
-│   └── processed/              # Datos procesados
-├── models/
-│   ├── baseline_lstm.py     # Modelo baseline
-│   └── improved_lstm.py       # Modelo mejorado
-├── utils/
-│   ├── data_loader.py          # Carga y preprocesamiento de datos
-│   └── visualization.py        # Visualización de resultados
-├── config.py                   # Configuración del proyecto
-├── train.py                    # Script de entrenamiento
-├── evaluate.py                 # Script de evaluación
-├── predict.py                  # Script de predicción
-├── requirements.txt            # Dependencias
-└── README.md                   # Este archivo
-```
-
 ## Instalación
 
 Instalar dependencias:
